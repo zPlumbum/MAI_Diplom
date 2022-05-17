@@ -19,8 +19,13 @@ beta = 0.57
 parser = argparse.ArgumentParser(description='Code for Feature Matching with FLANN.')
 # parser.add_argument('--input1', help='Path to input image 1.', default='book2.jpg')
 # parser.add_argument('--input2', help='Path to input image 2.', default='book_in_scene2.jpg')
-parser.add_argument('--input1', help='Path to input image 1.', default='stolb1.jpg')
-parser.add_argument('--input2', help='Path to input image 2.', default='stolb2.jpg')
+
+# parser.add_argument('--input1', help='Path to input image 1.', default='stolb1.jpg')
+# parser.add_argument('--input2', help='Path to input image 2.', default='stolb2.jpg')
+
+parser.add_argument('--input1', help='Path to input image 1.', default='musorka1.jpg')
+parser.add_argument('--input2', help='Path to input image 2.', default='musorka2.jpg')
+
 args = parser.parse_args()
 
 img1 = cv.imread(cv.samples.findFile(args.input1), cv.IMREAD_GRAYSCALE)
@@ -112,32 +117,81 @@ def detect_feature_points(image1, image2):
 
     if left < right:
         if left < upper:
+            print('left')
             correct_way = {'left': left.__round__(3)}
+        else:
+            print('else')
+            correct_way = {'upper': upper.__round__(3)}
     elif right < upper:
+        print('right')
         correct_way = {'right': right.__round__(3)}
-    else:
-        correct_way = {'upper': upper.__round__(3)}
-    print(f'The correct way is: {list(correct_way.keys())[0]} = {list(correct_way.values())[0]}')
+    print(correct_way)
+    direction = list(correct_way.keys())[0]
+    print(f'The correct way is: {direction} = {list(correct_way.values())[0]}')
 
-    print(correct_way['right'])
+    # print(correct_way['right'])
 
-    distance = str(list(correct_way.values())[0]) + 'm'
+    distance = list(correct_way.values())[0]
+    distance_str = str(list(correct_way.values())[0]) + 'm'
     font = cv.FONT_HERSHEY_SIMPLEX
     target_way_image = image2.copy()
     if list(correct_way.keys())[0] == 'right':
         cv.arrowedLine(target_way_image, (cx, cy), (cx + 200, cy), 255, 2, cv.LINE_AA)
-        cv.putText(target_way_image, distance, (cx + 40, cy - 10), font, 0.8, 255, 2, cv.LINE_AA)
+        cv.putText(target_way_image, distance_str, (cx + 40, cy - 10), font, 0.8, 255, 2, cv.LINE_AA)
     elif list(correct_way.keys())[0] == 'left':
         cv.arrowedLine(target_way_image, (cx, cy), (cx - 200, cy), 255, 2, cv.LINE_AA)
-        cv.putText(target_way_image, distance, (cx - 140, cy - 10), font, 0.8, 255, 2, cv.LINE_AA)
+        cv.putText(target_way_image, distance_str, (cx - 140, cy - 10), font, 0.8, 255, 2, cv.LINE_AA)
     else:
         cv.arrowedLine(target_way_image, (cx, cy), (cx, cy - 200), 255, 2, cv.LINE_AA)
-        cv.putText(target_way_image, distance, (cx + 10, cy - 100), font, 0.8, 255, 2, cv.LINE_AA)
+        cv.putText(target_way_image, distance_str, (cx + 10, cy - 100), font, 0.8, 255, 2, cv.LINE_AA)
 
     cv.imshow('Good Matches', img_matches)
     cv.imshow('Sorted Matches', out_image)
     cv.imshow('Right Direction', target_way_image)
+    draw_way(direction, distance, (138, 83, 0))
     cv.waitKey()
+
+
+def draw_way(direction, distance, background_color=(0, 0, 0)):
+    width, height = 800, 800
+    font = cv.FONT_HERSHEY_SIMPLEX
+    blank_image = np.zeros((width, height, 3), np.uint8)
+    blank_image[:] = background_color
+    distance = str(distance * 2) + 'm'
+
+    cv.circle(blank_image, (int(width / 2), int(height / 2)), 75, (0, 0, 255), thickness=2)
+    if direction == 'right' or direction == 'left':
+        cv.arrowedLine(blank_image, (50, 750), (150, 750), (255, 255, 255), 2, cv.LINE_AA)
+        cv.arrowedLine(blank_image, (50, 750), (50, 650), (255, 255, 255), 2, cv.LINE_AA)
+        cv.putText(blank_image, 'X', (160, 750), font, 0.8, (255, 255, 255), 2, cv.LINE_AA)
+        cv.putText(blank_image, 'Z', (60, 650), font, 0.8, (255, 255, 255), 2, cv.LINE_AA)
+        cv.arrowedLine(blank_image, (int(width / 2), 700), (int(width / 2), 550), (255, 255, 255), 2, cv.LINE_AA)
+        cv.arrowedLine(blank_image, (int(width / 2), 250), (int(width / 2), 100), (255, 255, 255), 2, cv.LINE_AA)
+        if direction == 'right':
+            cv.ellipse(blank_image, (int(width / 2), int(height / 2)), (150, 150), 0, -90, 90, (255, 255, 255), 2)
+            cv.arrowedLine(blank_image, (int(width / 2), int(height / 2)), (550, int(height/2)), (255, 255, 255), 2,
+                           cv.LINE_AA)
+            cv.putText(blank_image, distance, (int(width / 2) + 25, int(height / 2) - 10), font, 0.8,
+                       (255, 255, 255), 2, cv.LINE_AA)
+        else:
+            cv.ellipse(blank_image, (int(width / 2), int(height / 2)), (150, 150), 0, 90, 270, (255, 255, 255), 2)
+            cv.arrowedLine(blank_image, (int(width / 2), int(height / 2)), (250, int(height / 2)), (255, 255, 255), 2,
+                           cv.LINE_AA)
+            cv.putText(blank_image, distance, (int(width / 2) - 115, int(height / 2) - 10), font, 0.8,
+                       (255, 255, 255), 2, cv.LINE_AA)
+    else:
+        cv.arrowedLine(blank_image, (50, 750), (150, 750), (255, 255, 255), 2, cv.LINE_AA)
+        cv.arrowedLine(blank_image, (50, 750), (50, 650), (255, 255, 255), 2, cv.LINE_AA)
+        cv.putText(blank_image, 'Z', (160, 750), font, 0.8, (255, 255, 255), 2, cv.LINE_AA)
+        cv.putText(blank_image, 'Y', (60, 650), font, 0.8, (255, 255, 255), 2, cv.LINE_AA)
+        cv.arrowedLine(blank_image, (100, int(height / 2)), (250, int(height / 2)), (255, 255, 255), 2, cv.LINE_AA)
+        cv.arrowedLine(blank_image, (550, int(height / 2)), (700, int(height / 2)), (255, 255, 255), 2, cv.LINE_AA)
+        cv.ellipse(blank_image, (int(width / 2), int(height / 2)), (150, 150), 0, 180, 360, (255, 255, 255), 2)
+        cv.arrowedLine(blank_image, (int(width / 2), int(height / 2)), (int(width / 2), 250), (255, 255, 255), 2,
+                       cv.LINE_AA)
+        cv.putText(blank_image, distance, (int(width / 2) + 15, int(height / 2) - 60), font, 0.8,
+                   (255, 255, 255), 2, cv.LINE_AA)
+    cv.imshow('Example Way', blank_image)
 
 
 def main():
